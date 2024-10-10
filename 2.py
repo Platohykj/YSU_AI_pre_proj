@@ -139,6 +139,7 @@ if __name__ == '__main__':
     for epoch in range(num_epochs):
         print(f'Epoch {epoch+1}/{num_epochs}')
         train_model(model, trainloader, device)
+        torch.save(model,'./model_2/model_{}.pth'.format(epoch+1))
         scheduler.step()  # 调整学习率
     end_time = time.time()  # 记录结束时间
     elapsed_time = end_time - start_time  # 计算运行时间
