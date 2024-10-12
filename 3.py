@@ -1,3 +1,6 @@
+import os
+# 在运行 TensorFlow 之前设置环境变量
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -7,6 +10,8 @@ import jieba
 from collections import Counter
 from tqdm import tqdm
 from multiprocessing import Pool
+from torch.utils.tensorboard import SummaryWriter
+
 
 # 检查设备
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -33,6 +38,7 @@ def parallel_tokenize(texts):
 
 # 定义主函数
 def main():
+
     # 加载数据
     train_texts, train_labels = load_data('./data/THUCNews/cnews.train.txt')
     test_texts, test_labels = load_data('./data/THUCNews/cnews.test.txt')
@@ -111,7 +117,10 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
     # 训练模型
-    num_epochs = 10
+    num_epochs = 10000
+    #如果不存在文件夹则创建
+    os.makedirs(f'./logs/logs_3_{num_epochs}', exist_ok=True)
+    writer = SummaryWriter(f'./logs/logs_3_{num_epochs}')
     for epoch in range(num_epochs):
         model.train()
         total_loss = 0
@@ -124,23 +133,26 @@ def main():
             total_loss += loss.item()
         torch.save(model.state_dict(), f'./model_3/model_epoch_{epoch + 1}.pth')
         print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {total_loss / len(train_loader):.4f}')
+        writer.add_scalar('Loss/train', total_loss / len(train_loader), epoch)
 
-    # 评估模型
-    model.eval()
-    all_preds = []
-    all_labels = []
 
-    with torch.no_grad():
-        for texts, labels in test_loader:
-            outputs = model(texts)
-            _, predicted = torch.max(outputs, 1)
-            all_preds.extend(predicted.cpu().numpy())
-            all_labels.extend(labels.cpu().numpy())
+        # 评估模型
+        model.eval()
+        all_preds = []
+        all_labels = []
 
-    # 计算准确率
-    accuracy = accuracy_score(all_labels, all_preds)
-    print(f'测试集准确率: {accuracy:.4f}')
-    print(classification_report(all_labels, all_preds, target_names=label2idx.keys()))
+        with torch.no_grad():
+            for texts, labels in test_loader:
+                outputs = model(texts)
+                _, predicted = torch.max(outputs, 1)
+                all_preds.extend(predicted.cpu().numpy())
+                all_labels.extend(labels.cpu().numpy())
+
+        # 计算准确率
+        accuracy = accuracy_score(all_labels, all_preds)
+        writer.add_scalar('Accuracy/test', accuracy, epoch)
+        print(f'测试集准确率: {accuracy:.4f}')
+        print(classification_report(all_labels, all_preds, target_names=label2idx.keys()))
 
 if __name__ == '__main__':
     main()

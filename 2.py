@@ -1,5 +1,6 @@
+import os
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import time
-
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -8,6 +9,7 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 from tqdm import tqdm  # 导入 tqdm
+from torch.utils.tensorboard import SummaryWriter
 
 # 数据增强与归一化
 transform_train = transforms.Compose([
@@ -110,9 +112,9 @@ def train_model(model, trainloader, device):
         _, predicted = outputs.max(1)
         total += labels.size(0)
         correct += predicted.eq(labels).sum().item()
-
         # 更新进度条的描述
         progress_bar.set_postfix(loss=running_loss / (i + 1), accuracy=100 * correct / total)
+        writer.add_scalar('Loss/train', running_loss / len(trainloader), epoch)
 
 # 测试模型
 def test_model(model, testloader, device):
@@ -129,20 +131,24 @@ def test_model(model, testloader, device):
             _, predicted = outputs.max(1)
             total += labels.size(0)
             correct += predicted.eq(labels).sum().item()
-
+    writer.add_scalar('Accuracy/test', 100 * correct / total, epoch)
     print(f'Accuracy on the test set: {100 * correct / total:.2f}%')
+
 
 # 主程序
 if __name__ == '__main__':
     start_time = time.time()
-    num_epochs = 25
+    num_epochs = 100
+    os.makedirs(f'logs/logs_2_{num_epochs}', exist_ok=True)
+    writer = SummaryWriter(f'logs/logs_2_{num_epochs}')
     for epoch in range(num_epochs):
         print(f'Epoch {epoch+1}/{num_epochs}')
         train_model(model, trainloader, device)
         torch.save(model,'./model_2/model_{}.pth'.format(epoch+1))
         scheduler.step()  # 调整学习率
+        test_model(model, testloader, device)
     end_time = time.time()  # 记录结束时间
     elapsed_time = end_time - start_time  # 计算运行时间
     print(f'Training time: {elapsed_time:.2f} seconds')  # 打印运行时间
-    test_model(model, testloader, device)
+
 
