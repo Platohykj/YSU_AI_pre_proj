@@ -1,4 +1,5 @@
 import os
+import time
 # 在运行 TensorFlow 之前设置环境变量
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import torch
@@ -115,9 +116,9 @@ def main():
     # 损失函数和优化器
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
-
+    accuracy_best = 0.0
     # 训练模型
-    num_epochs = 10000
+    num_epochs = 1000
     #如果不存在文件夹则创建
     os.makedirs(f'./logs/logs_3_{num_epochs}', exist_ok=True)
     writer = SummaryWriter(f'./logs/logs_3_{num_epochs}')
@@ -131,11 +132,8 @@ def main():
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
-        torch.save(model.state_dict(), f'./model_3/model_epoch_{epoch + 1}.pth')
         print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {total_loss / len(train_loader):.4f}')
         writer.add_scalar('Loss/train', total_loss / len(train_loader), epoch)
-
-
         # 评估模型
         model.eval()
         all_preds = []
@@ -151,6 +149,14 @@ def main():
         # 计算准确率
         accuracy = accuracy_score(all_labels, all_preds)
         writer.add_scalar('Accuracy/test', accuracy, epoch)
+        if accuracy > accuracy_best:
+            accuracy_best = accuracy
+            torch.save(model.state_dict(), f'./model_3/model_best.pth')
+            with open("./model_3/log.txt", "w", encoding="utf-8") as f:
+                f.write(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {total_loss / len(train_loader):.4f}')
+                f.write(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
+                f.write(f"Accuracy: {accuracy:.4f}\n")
+                f.write(classification_report(all_labels, all_preds, target_names=label2idx.keys()))
         print(f'测试集准确率: {accuracy:.4f}')
         print(classification_report(all_labels, all_preds, target_names=label2idx.keys()))
 

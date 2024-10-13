@@ -1,3 +1,5 @@
+import os
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import numpy as np
 import pandas as pd
 import torch
@@ -6,6 +8,7 @@ import torch.optim as optim
 from sklearn.preprocessing import MinMaxScaler, PolynomialFeatures
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
+from torch.utils.tensorboard import SummaryWriter
 
 # 检查设备
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -64,13 +67,10 @@ model = BPNeuralNetwork(input_size).to(device)
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)  # 调低学习率，加入权重衰减
 
-# 提前停止的相关设置
-best_loss = float('inf')
-patience = 1000  # 如果损失在1000个epoch中没有下降，则停止训练
-trigger_times = 0
-
 # 训练模型
-num_epochs = 9000
+num_epochs = 50000
+os.makedirs(f'logs/logs_1_{num_epochs}', exist_ok=True)
+writer = SummaryWriter(f'logs/logs_1_{num_epochs}')
 for epoch in range(num_epochs):
     model.train()
     optimizer.zero_grad()  # 清零梯度
@@ -79,24 +79,18 @@ for epoch in range(num_epochs):
     loss.backward()  # 反向传播
     optimizer.step()  # 更新权重
 
-    # 每100个epoch打印一次损失
+    # 每100个epoch打印一次损失并计算均方误差
     if (epoch + 1) % 100 == 0:
         print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {loss.item():.4f}')
-
-    # 提前停止逻辑：检查验证集误差是否有改进
-    model.eval()
-    with torch.no_grad():
-        y_pred_val = model(X_test_tensor).squeeze()
-        val_loss = criterion(y_pred_val, y_test_tensor)
-
-    if val_loss < best_loss:
-        best_loss = val_loss
-        trigger_times = 0
-    else:
-        trigger_times += 1
-        if trigger_times >= patience:
-            print(f'Early stopping at epoch {epoch + 1}')
-            break
+        writer.add_scalar('Loss/train', loss.item(), epoch)
+        # 计算验证集上的均方误差
+        model.eval()
+        with torch.no_grad():
+            y_pred_val = model(X_test_tensor).squeeze()
+            val_loss = criterion(y_pred_val, y_test_tensor)
+            val_mse = mean_squared_error(y_test_tensor.cpu(), y_pred_val.cpu())
+        print(f'Epoch [{epoch + 1}/{num_epochs}], Validation MSE: {val_mse:.4f}')
+        writer.add_scalar('Validation MSE', val_mse, epoch)
 
 # 进行预测
 model.eval()
