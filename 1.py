@@ -7,7 +7,7 @@ import torch.nn as nn
 import torch.optim as optim
 from sklearn.preprocessing import MinMaxScaler, PolynomialFeatures
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from torch.utils.tensorboard import SummaryWriter
 
 # 检查设备
@@ -71,6 +71,7 @@ optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)  # 调�
 num_epochs = 50000
 os.makedirs(f'logs/logs_1_{num_epochs}', exist_ok=True)
 writer = SummaryWriter(f'logs/logs_1_{num_epochs}')
+mse_best = 200.0
 for epoch in range(num_epochs):
     model.train()
     optimizer.zero_grad()  # 清零梯度
@@ -79,20 +80,35 @@ for epoch in range(num_epochs):
     loss.backward()  # 反向传播
     optimizer.step()  # 更新权重
 
-    # 每100个epoch打印一次损失并计算均方误差
-    if (epoch + 1) % 100 == 0:
-        print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {loss.item():.4f}')
-        writer.add_scalar('Loss/train', loss.item(), epoch)
-        # 计算验证集上的均方误差
-        model.eval()
-        with torch.no_grad():
-            y_pred_val = model(X_test_tensor).squeeze()
-            val_loss = criterion(y_pred_val, y_test_tensor)
-            val_mse = mean_squared_error(y_test_tensor.cpu(), y_pred_val.cpu())
-        print(f'Epoch [{epoch + 1}/{num_epochs}], Validation MSE: {val_mse:.4f}')
-        writer.add_scalar('Validation MSE', val_mse, epoch)
+    print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {loss.item():.4f}')
+    writer.add_scalar('Loss/train', loss.item(), epoch)
 
-# 进行预测
+    # 验证模式下计算预测值和真实值的多种评价指标
+    model.eval()
+    with torch.no_grad():
+        y_pred_val = model(X_test_tensor).squeeze()
+        val_loss = criterion(y_pred_val, y_test_tensor)
+        val_mse = mean_squared_error(y_test_tensor.cpu(), y_pred_val.cpu())
+        val_mae = mean_absolute_error(y_test_tensor.cpu(), y_pred_val.cpu())
+        val_rmse = np.sqrt(val_mse)
+        val_r2 = r2_score(y_test_tensor.cpu(), y_pred_val.cpu())
+    print(f'Epoch [{epoch + 1}/{num_epochs}], Validation MSE: {val_mse:.4f}, MAE: {val_mae:.4f}, RMSE: {val_rmse:.4f}, R²: {val_r2:.4f}')
+    # 将不同指标写入TensorBoard
+    writer.add_scalar('Validation MSE', val_mse, epoch)
+    writer.add_scalar('Validation MAE', val_mae, epoch)
+    writer.add_scalar('Validation RMSE', val_rmse, epoch)
+    writer.add_scalar('Validation R²', val_r2, epoch)
+    if val_mse < mse_best:
+        mse_best = val_mse
+        torch.save(model.state_dict(), f'model/model_1/model_best.pth')
+        with open('model/model_1/log.txt', 'w') as f:
+            f.write(f"epoch: {epoch + 1}/{num_epochs}: loss: {loss.item():.4f}\n")
+            f.write(f"Validation MSE: {val_mse:.4f}\n")
+            f.write(f"Validation MAE: {val_mae:.4f}\n")
+            f.write(f"Validation RMSE: {val_rmse:.4f}\n")
+            f.write(f"Validation R2: {val_r2:.4f}\n")
+
+# 进行最终预测并计算评估指标
 model.eval()
 with torch.no_grad():
     y_pred_tensor = model(X_test_tensor).squeeze()  # 进行预测
@@ -100,6 +116,17 @@ with torch.no_grad():
 # 转换为numpy数组
 y_pred = y_pred_tensor.cpu().numpy()
 
-# 计算预测误差（均方误差）
+# 计算最终的多种评估指标
 mse = mean_squared_error(y_test, y_pred)
-print(f"均方误差（Mean Squared Error）: {mse}")
+mae = mean_absolute_error(y_test, y_pred)
+rmse = np.sqrt(mse)
+r2 = r2_score(y_test, y_pred)
+
+print(f"均方误差（MSE）: {mse:.4f}")
+print(f"平均绝对误差（MAE）: {mae:.4f}")
+print(f"均方根误差（RMSE）: {rmse:.4f}")
+print(f"决定系数（R²）: {r2:.4f}")
+
+
+# 关闭 TensorBoard 记录器
+writer.close()

@@ -1,0 +1,1 @@
+Epoch 92: Best test accuracy: 84.83%

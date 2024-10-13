@@ -151,8 +151,8 @@ def main():
         writer.add_scalar('Accuracy/test', accuracy, epoch)
         if accuracy > accuracy_best:
             accuracy_best = accuracy
-            torch.save(model.state_dict(), f'./model_3/model_best.pth')
-            with open("./model_3/log.txt", "w", encoding="utf-8") as f:
+            torch.save(model.state_dict(), f'model/model_3/model_best.pth')
+            with open("model/model_3/log.txt", "w", encoding="utf-8") as f:
                 f.write(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {total_loss / len(train_loader):.4f}')
                 f.write(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
                 f.write(f"Accuracy: {accuracy:.4f}\n")

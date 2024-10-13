@@ -1,0 +1,5 @@
+epoch: 5659/50000: loss: 3.0285
+Validation MSE: 8.4359
+Validation MAE: 1.9795
+Validation RMSE: 2.9045
+Validation R2: 0.9058

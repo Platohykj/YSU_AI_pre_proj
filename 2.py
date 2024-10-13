@@ -88,7 +88,7 @@ optimizer = optim.Adam(model.parameters(), lr=0.001)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
 
 # 训练模型
-def train_model(model, trainloader, device):
+def train_model(model, trainloader, device, epoch):
     model.train()  # 设置为训练模式
     running_loss = 0.0
     correct = 0
@@ -117,7 +117,10 @@ def train_model(model, trainloader, device):
         writer.add_scalar('Loss/train', running_loss / len(trainloader), epoch)
 
 # 测试模型
-def test_model(model, testloader, device):
+best_accuracy = 0.0  # 用于记录最佳准确率
+
+def test_model(model, testloader, device, epoch):
+    global best_accuracy
     model.eval()  # 设置为评估模式
     correct = 0
     total = 0
@@ -131,24 +134,32 @@ def test_model(model, testloader, device):
             _, predicted = outputs.max(1)
             total += labels.size(0)
             correct += predicted.eq(labels).sum().item()
-    writer.add_scalar('Accuracy/test', 100 * correct / total, epoch)
-    print(f'Accuracy on the test set: {100 * correct / total:.2f}%')
 
+    accuracy = 100 * correct / total
+    writer.add_scalar('Accuracy/test', accuracy, epoch)
+    print(f'Accuracy on the test set: {accuracy:.2f}%')
+
+    # 如果当前的精度超过之前记录的最佳精度，保存模型
+    if accuracy > best_accuracy:
+        best_accuracy = accuracy
+        torch.save(model.state_dict(), 'model/model_2/model_best.pth')  # 保存最佳模型
+        with open('model/model_2/log.txt', 'w') as f:
+            f.write(f'Epoch {epoch+1}: Best test accuracy: {best_accuracy:.2f}%\n')
 
 # 主程序
 if __name__ == '__main__':
     start_time = time.time()
     num_epochs = 100
     os.makedirs(f'logs/logs_2_{num_epochs}', exist_ok=True)
+    os.makedirs('model/model_2', exist_ok=True)  # 创建模型保存的目录
     writer = SummaryWriter(f'logs/logs_2_{num_epochs}')
+
     for epoch in range(num_epochs):
         print(f'Epoch {epoch+1}/{num_epochs}')
-        train_model(model, trainloader, device)
-        torch.save(model,'./model_2/model_{}.pth'.format(epoch+1))
+        train_model(model, trainloader, device, epoch)
         scheduler.step()  # 调整学习率
-        test_model(model, testloader, device)
+        test_model(model, testloader, device, epoch)
+
     end_time = time.time()  # 记录结束时间
     elapsed_time = end_time - start_time  # 计算运行时间
     print(f'Training time: {elapsed_time:.2f} seconds')  # 打印运行时间
-
-

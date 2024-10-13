@@ -10,8 +10,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 
 def main():
-
-
+    accuracy_best = 0.0
     # 数据预处理与增强
     transform = transforms.Compose([
         transforms.RandomCrop(32, padding=4),  # 随机裁剪
@@ -22,10 +21,10 @@ def main():
     ])
 
     # 加载CIFAR-10数据集
-    trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
+    trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=False, transform=transform)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True, num_workers=2)
 
-    testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
+    testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=False, transform=transform)
     testloader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=2)
 
     # 定义DenseNet模型
@@ -73,6 +72,12 @@ def main():
         print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {running_loss / len(trainloader):.4f}')
         writer.add_scalar('Loss/train', running_loss / len(trainloader), epoch)
         writer.add_scalar('Accuracy/test', 100 * correct / total, epoch)
+        if correct > accuracy_best:
+            accuracy_best = correct
+            torch.save(model.state_dict(), f'./model/model_2d/model_best.pth')
+            with open(f'./model/model_2d/log.txt', 'w') as f:
+                f.write(f'Accuracy of the model on the test set: {100 * correct / total:.2f}%')
+                f.write(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {running_loss / len(trainloader):.4f}')
 
 if __name__ == '__main__':
     main()

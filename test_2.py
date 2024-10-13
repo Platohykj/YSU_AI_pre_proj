@@ -45,7 +45,7 @@ class CNN(nn.Module):
 # 加载模型结构
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # 加载保存的整个模型
-model = torch.load('./model_2/model_25.pth', weights_only=False)  # 直接加载整个模型
+model = torch.load('model/model_2/model_25.pth', weights_only=False)  # 直接加载整个模型
 
 # 设置为评估模式
 model.eval()
