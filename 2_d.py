@@ -44,7 +44,7 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)  # L2正则化
 
     # 训练模型
-    num_epochs = 100
+    num_epochs = 1000
     os.makedirs(f'./logs/logs_2d_{num_epochs}', exist_ok=True)
     writer = SummaryWriter(f'logs/logs_2d_{num_epochs}')
     for epoch in range(num_epochs):
@@ -76,7 +76,7 @@ def main():
             accuracy_best = correct
             torch.save(model.state_dict(), f'./model/model_2d/model_best.pth')
             with open(f'./model/model_2d/log.txt', 'w') as f:
-                f.write(f'Accuracy of the model on the test set: {100 * correct / total:.2f}%')
+                f.write(f'Accuracy of the model on the test set: {100 * correct / total:.2f}%\n')
                 f.write(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {running_loss / len(trainloader):.4f}')
 
 if __name__ == '__main__':
