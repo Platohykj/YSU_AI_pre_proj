@@ -119,7 +119,7 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)  # L2正则化
 
     # 训练模型
-    num_epochs = 100
+    num_epochs = 400
     os.makedirs(f'./logs/logs_2d_cbam_{num_epochs}', exist_ok=True)
     writer = SummaryWriter(f'logs/logs_2d_cbam_{num_epochs}')
 
