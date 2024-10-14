@@ -1,0 +1,2 @@
+Accuracy of the model on the test set: 85.00%
+Epoch [66/100], Loss: 0.2613
