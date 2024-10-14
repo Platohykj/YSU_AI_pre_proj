@@ -1,0 +1,2 @@
+Best Learning Rate: 0.11600120118000612, Best Momentum: 0.2708353609663452, Best Fitness: 0.5938460774675094Accuracy of the model on the test set: 89.33%
+Epoch [174/200], Loss: 0.0253

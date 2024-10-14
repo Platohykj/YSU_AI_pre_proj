@@ -1,3 +1,5 @@
+import os
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -5,6 +7,7 @@ import torchvision
 import torchvision.transforms as transforms
 import numpy as np
 from torch.cuda.amp import autocast, GradScaler  # 导入混合精度训练所需的库
+from torch.utils.tensorboard import SummaryWriter
 
 # 数据预处理
 transform = transforms.Compose([
@@ -185,6 +188,7 @@ def pso(num_particles=10, num_iterations=5):
     return global_best_position, global_best_fitness
 
 if __name__ == '__main__':
+
     # 运行PSO
     best_position, best_fitness = pso(num_particles=10, num_iterations=5)
     best_lr, best_momentum = best_position
@@ -194,9 +198,11 @@ if __name__ == '__main__':
     model = ResNet(BasicBlock, [5, 5, 5]).to('cuda' if torch.cuda.is_available() else 'cpu')
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(model.parameters(), lr=best_lr, momentum=best_momentum)
-
-    num_epochs = 100
+    num_epochs = 200
+    os.makedirs(f'logs/logs_2_psoResNet_{num_epochs}', exist_ok=True)
+    writer = SummaryWriter(f'logs/logs_2_psoResNet_{num_epochs}')
     scaler = GradScaler()  # 在这里初始化缩放器
+    accuracy_best = 0.0
     for epoch in range(num_epochs):
         model.train()
         running_loss = 0.0
@@ -212,7 +218,16 @@ if __name__ == '__main__':
             scaler.step(optimizer)
             scaler.update()
             running_loss += loss.item()
-
         # 测试集准确率
         accuracy = evaluate_model(model, testloader)
         print(f'Epoch [{epoch + 1}/{num_epochs}], Test Accuracy: {accuracy:.2f}%')
+        writer.add_scalar('Loss/train', running_loss / len(trainloader), epoch)
+        writer.add_scalar('Accuracy/train', accuracy, epoch)
+        writer.add_scalar('Loss/test', running_loss / len(testloader), epoch)
+        if accuracy > accuracy_best:
+            accuracy_best = accuracy
+            torch.save(model.state_dict(), f'./model/model_2d_psoResNet/model_best.pth')
+            with open(f'./model/model_2d_psoResNet/log.txt', 'w') as f:
+                f.write(f'Best Learning Rate: {best_lr}, Best Momentum: {best_momentum}, Best Fitness: {best_fitness}')
+                f.write(f'Accuracy of the model on the test set: {accuracy:.2f}%\n')
+                f.write(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {running_loss / len(trainloader):.4f}')
