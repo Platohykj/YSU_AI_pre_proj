@@ -1,0 +1,43 @@
+Loading model successful
+Using device: cuda
+Epoch 1, Batch 100, Loss: 2.195, Accuracy: 23.20%
+Test Accuracy: 56.23%
+Epoch 2, Batch 100, Loss: 0.723, Accuracy: 74.56%
+Test Accuracy: 90.02%
+Epoch 3, Batch 100, Loss: 0.224, Accuracy: 92.43%
+Test Accuracy: 93.08%
+Epoch 4, Batch 100, Loss: 0.124, Accuracy: 95.72%
+Test Accuracy: 94.29%
+Epoch 5, Batch 100, Loss: 0.093, Accuracy: 96.81%
+Test Accuracy: 94.15%
+Epoch 6, Batch 100, Loss: 0.073, Accuracy: 97.29%
+Test Accuracy: 94.24%
+Epoch 7, Batch 100, Loss: 0.064, Accuracy: 97.67%
+Test Accuracy: 94.55%
+Epoch 8, Batch 100, Loss: 0.060, Accuracy: 97.86%
+Test Accuracy: 94.45%
+Epoch 9, Batch 100, Loss: 0.042, Accuracy: 98.59%
+Test Accuracy: 93.28%
+Epoch 10, Batch 100, Loss: 0.054, Accuracy: 98.06%
+Test Accuracy: 94.24%
+Epoch 11, Batch 100, Loss: 0.040, Accuracy: 98.61%
+Test Accuracy: 94.24%
+Epoch 12, Batch 100, Loss: 0.036, Accuracy: 98.73%
+Test Accuracy: 94.04%
+Epoch 13, Batch 100, Loss: 0.043, Accuracy: 98.46%
+Test Accuracy: 94.16%
+Epoch 14, Batch 100, Loss: 0.035, Accuracy: 98.83%
+Test Accuracy: 94.96%
+Epoch 15, Batch 100, Loss: 0.028, Accuracy: 98.99%
+Test Accuracy: 95.05%
+Epoch 16, Batch 100, Loss: 0.030, Accuracy: 99.05%
+Test Accuracy: 94.80%
+Epoch 17, Batch 100, Loss: 0.030, Accuracy: 98.98%
+Test Accuracy: 94.76%
+Epoch 18, Batch 100, Loss: 0.029, Accuracy: 98.94%
+Test Accuracy: 94.81%
+Epoch 19, Batch 100, Loss: 0.020, Accuracy: 99.28%
+Test Accuracy: 94.63%
+Epoch 20, Batch 100, Loss: 0.028, Accuracy: 99.03%
+Test Accuracy: 94.80%
+Best Accuracy: 95.05%

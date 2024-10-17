@@ -100,7 +100,7 @@ if __name__ == '__main__':
         # 如果准确率提升，保存模型
         if test_acc > best_acc:
             best_acc = test_acc
-            torch.save(model.state_dict(), './model/model_2_vit/model_2_vit.pth')
+            torch.save(model.state_dict(), 'model/model_2_vit_base_16_224/model_2_vit_base_16_224.pth')
 
         # 调整学习率
         scheduler.step()
